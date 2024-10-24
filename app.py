@@ -3,14 +3,14 @@ import datetime
 import streamlit as st
 import pandas as pd
 
-CHANNELS = ['hbo',
-            'hbo-2',
-            'hbo-3',
-            'cinestar-tv-action-thriller',
-            'cinestar-tv-fantasy',
-            'cinestar-tv-comedy',
-            'cinestar-tv-premiere-1',
-            'cinestar-tv-premiere-2']
+CHANNELS = ['HBO',
+            'HBO 2',
+            'HBO 3',
+            'Cinestar TV action-thriller',
+            'Cinestar TV fantasy',
+            'Cinestar TV comedy',
+            'Cinestar TV premiere 1',
+            'Cinestar TV premiere 2']
 START_DATE = datetime.date.today() - datetime.timedelta(days=7)
 END_DATE = datetime.date.today()
 
@@ -22,15 +22,15 @@ st.set_page_config(page_title="TV raspored za prethodnu nedelju",
 
 def load_df(channel: str) -> pd.DataFrame:
     """Loads data from the database for the selected tv channel."""
-    table_name = channel.replace('-', '_').capitalize()
+    table_name = channel.replace(' ', '_').capitalize()
 
     conn = st.connection("postgresql", type="sql")
     return conn.query('SELECT * FROM {}'.format(table_name), ttl="10m")
 
 
 def prepare_for_display(df: pd.DataFrame,
-                        start: datetime.date = START_DATE,
-                        end: datetime.date = END_DATE) -> pd.DataFrame:
+                        start: datetime.date,
+                        end: datetime.date) -> pd.DataFrame:
     """Transforms data for displaying in the app
     and creates a new dataframe."""
     df.sort_values('datetime', inplace=True)
@@ -49,8 +49,14 @@ def prepare_for_display(df: pd.DataFrame,
         d.reset_index(inplace=True, drop=True)
         dfs.append(d)
 
-    date_display = [ts.strftime('%d. %h') for ts in date_range]
-    nd = pd.DataFrame({dt: d['display'] for dt, d in zip(date_display, dfs)})
+    date_display = [ts.strftime('%d. %h %w') for ts in date_range]
+    translate = 'Nedelja Ponedeljak Utorak Sreda Četvrtak Petak Subota'.split()
+    date_display_with_day_names = [
+        date[:-1] + ' - ' + translate[int(date.split()[2])]
+        for date in date_display]
+
+    nd = pd.DataFrame({dt: d['display']
+                       for dt, d in zip(date_display_with_day_names, dfs)})
     nd.fillna('', inplace=True)
 
     return nd
