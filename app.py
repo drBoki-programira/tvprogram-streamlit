@@ -6,7 +6,7 @@ import pandas as pd
 CHANNELS = ['HBO',
             'HBO 2',
             'HBO 3',
-            'Cinestar TV action-thriller',
+            'Cinestar TV action thriller',
             'Cinestar TV fantasy',
             'Cinestar TV comedy',
             'Cinestar TV premiere 1',
